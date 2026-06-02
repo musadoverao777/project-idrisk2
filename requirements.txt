@@ -1,0 +1,35 @@
+# IDRISK2 — Data Collection and Preprocessing Dependencies
+# Image processing
+opencv-python>=4.9.0
+Pillow>=10.3.0
+pillow-heif>=0.16.0      # HEIC/HEIF support for smartphone images
+numpy>=1.26.0
+# Annotation and data management
+python-dateutil>=2.9.0
+# OCR engines (Section 4.3)
+pytesseract>=0.3.13
+easyocr>=1.7.1
+paddleocr>=2.7.3
+# VLM integrations (Section 4.4)
+openai>=1.30.0           # GPT-4o
+anthropic>=0.34.0        # Claude (sonnet / opus / haiku)
+transformers>=4.45.0     # LLaVA-NeXT, Qwen2-VL (Qwen2-VL requires >=4.45)
+torch>=2.3.0
+accelerate>=0.30.0       # Needed by transformers device_map="auto"
+qwen-vl-utils>=0.0.8     # Optional helper for Qwen2-VL inputs
+# RAG pipeline (Section 4.5)
+llama-index>=0.10.40
+llama-index-vector-stores-chroma>=0.1.10
+llama-index-llms-openai>=0.1.20
+llama-index-embeddings-huggingface>=0.2.0
+llama-index-retrievers-bm25>=0.2.0
+llama-index-postprocessor-colbert-rerank>=0.1.4
+chromadb>=0.5.0
+sentence-transformers>=3.0.0
+# FoodEx2 taxonomy ingestion (Section 4.5.1)
+openpyxl>=3.1.2
+# Evaluation metrics (Section 4.3)
+editdistance>=0.8.1
+# Utilities
+tqdm>=4.66.0
+python-dotenv>=1.0.0

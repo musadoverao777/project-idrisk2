@@ -74,6 +74,11 @@ Após a classificação, aplica-se minimização de dados GDPR: a imagem origina
 idrisk2/
 ├── pipeline.py                 # Orquestrador principal
 ├── requirements.txt            # Dependências Python
+├── api/                        # REST API FastAPI (frontend MVP)
+│   ├── main.py
+│   ├── schemas.py
+│   └── serializers.py
+├── frontend/                   # Interface React + TypeScript + Tailwind
 └── src/
     ├── __init__.py
     ├── common/
@@ -179,7 +184,46 @@ IDRISK2_MAX_RETRIES=2
 
 ## Utilização
 
-O IDRISK2 é utilizado como biblioteca Python. O único entry point é `IDRISK2Pipeline`.
+O IDRISK2 pode ser utilizado como **biblioteca Python** ou através do **frontend web** (MVP).
+
+### Frontend web (MVP)
+
+Interface React para upload de imagem e visualização da classificação FoodEx2.
+
+**Pré-requisitos:** `.env` configurado, knowledge base construída, dependências Python e Node.js instaladas.
+
+```bash
+# Terminal 1 — API FastAPI (carrega modelos na 1.ª execução; pode demorar ~30s)
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn api.main:app --reload --port 8000
+
+# Terminal 2 — Frontend React
+cd frontend
+npm install
+npm run dev
+```
+
+Abrir [http://localhost:5173](http://localhost:5173). O frontend faz proxy de `/api` para `http://localhost:8000`.
+
+**Endpoints da API:**
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/api/health` | Estado do pipeline |
+| `POST` | `/api/classify` | Upload de imagem (`multipart/form-data`, campo `file`) |
+
+Teste manual com curl:
+
+```bash
+curl http://localhost:8000/api/health
+curl -X POST http://localhost:8000/api/classify \
+  -F "file=@images/test/sanduiche.jpg"
+```
+
+### Biblioteca Python
+
+O entry point principal continua a ser `IDRISK2Pipeline`.
 
 ### Exemplo básico
 

@@ -22,3 +22,7 @@ data/
 .idea/
 .vscode/
 *.code-workspace
+
+# Frontend
+frontend/node_modules/
+frontend/dist/

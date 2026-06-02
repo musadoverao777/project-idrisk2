@@ -1,0 +1,24 @@
+# Ambiente virtual
+.venv/
+__pycache__/
+*.py[cod]
+
+# Configuração local com credenciais
+.env
+
+# Dados gerados em runtime
+data/
+
+# Modelos e cache (podem ser grandes)
+.cache/
+*.bin
+*.pt
+*.pth
+
+# macOS
+.DS_Store
+
+# IDEs
+.idea/
+.vscode/
+*.code-workspace

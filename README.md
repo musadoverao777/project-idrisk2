@@ -1,3 +1,13 @@
+---
+title: IDRISK2
+emoji: 🍎
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # IDRISK2
 
 Pipeline de classificação automática de produtos alimentares na taxonomia **EFSA FoodEx2** a partir de imagens de rótulos, desenvolvido no contexto de dissertação de mestrado/doutoramento.

@@ -1,0 +1,19 @@
+# Não enviar para o build do container
+.venv/
+frontend/
+node_modules/
+.cache/
+data/
+.git/
+__pycache__/
+*.pyc
+*.zip
+*.docx
+*.svg
+.env
+.DS_Store
+images/
+scripts/
+benchmark_vlms.py
+test_pipeline.py
+colab_*.ipynb

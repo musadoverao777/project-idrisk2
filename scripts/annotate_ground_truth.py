@@ -29,6 +29,11 @@ from dotenv import load_dotenv  # noqa: E402
 load_dotenv(PROJECT_ROOT / ".env")
 EVAL_DIR = PROJECT_ROOT / "data" / "evaluation"
 GROUND_TRUTH_PATH = PROJECT_ROOT / "data" / "ground_truth.json"
+# Default annotator ID written into every new ground truth entry. The
+# FoodEx2Annotation schema requires this field for multi-annotator
+# validation support (Section 4.2.2); the present evaluation uses a
+# single annotator (Section 6.6), so all entries share this ID.
+ANNOTATOR_ID = "bianca_oliveira"
 XLSX_PATH = next(
     (PROJECT_ROOT / "docs" / "efsa").glob("*appendix*.xlsx"),
     None,
@@ -156,8 +161,11 @@ def prompt_decision(terms: dict, candidates: list[dict]) -> tuple[str, dict]:
         if choice.isdigit() and 1 <= int(choice) <= len(candidates):
             c = candidates[int(choice) - 1]
             return "annotate", {
-                "code": c["code"],
-                "label": c["label"],
+                "base_term_code": c["code"],
+                "base_term_label": c["label"],
+                "facets": {},
+                "confidence": "high",
+                "notes": "",
                 "source": "retrieved_candidate",
                 "rerank_score": c["rerank"],
             }
@@ -174,8 +182,11 @@ def prompt_decision(terms: dict, candidates: list[dict]) -> tuple[str, dict]:
             if sub.isdigit() and 1 <= int(sub) <= len(hits):
                 code, name = hits[int(sub) - 1]
                 return "annotate", {
-                    "code": code,
-                    "label": name,
+                    "base_term_code": code,
+                    "base_term_label": name,
+                    "facets": {},
+                    "confidence": "medium",
+                    "notes": "",
                     "source": "keyword_search",
                     "search_keyword": keyword,
                 }
@@ -184,8 +195,11 @@ def prompt_decision(terms: dict, candidates: list[dict]) -> tuple[str, dict]:
         candidate_code = choice.upper().strip()
         if candidate_code in terms:
             return "annotate", {
-                "code": candidate_code,
-                "label": terms[candidate_code]["name"],
+                "base_term_code": candidate_code,
+                "base_term_label": terms[candidate_code]["name"],
+                "facets": {},
+                "confidence": "high",
+                "notes": "",
                 "source": "manual_code",
             }
         print(f"    '{candidate_code}' not in approved taxonomy. Try /keyword to search.")
@@ -232,21 +246,25 @@ def main() -> int:
             continue
         if action == "none":
             payload = {
-                "code": None,
-                "label": None,
+                "base_term_code": None,
+                "base_term_label": None,
+                "facets": {},
+                "confidence": "low",
+                "notes": "",
                 "source": "no_appropriate_candidate",
             }
         gt[image] = {
             **payload,
+            "annotator_id": ANNOTATOR_ID,
+            "annotation_date": datetime.now(timezone.utc).isoformat(),
             "system_code": system_code,
             "vlm_code": record["vlm"]["preliminary_code"],
-            "annotated_at": datetime.now(timezone.utc).isoformat(),
         }
         save_ground_truth(gt)
         idx += 1
     # Summary
-    annotated = {k: v for k, v in gt.items() if v.get("code")}
-    not_found = {k: v for k, v in gt.items() if v.get("code") is None}
+    annotated = {k: v for k, v in gt.items() if v.get("base_term_code")}
+    not_found = {k: v for k, v in gt.items() if v.get("base_term_code") is None}
     print("\n" + "=" * 78)
     print("ANNOTATION SUMMARY")
     print("=" * 78)

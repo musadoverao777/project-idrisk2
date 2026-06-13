@@ -49,10 +49,10 @@ def per_image_diagnostics(gt: dict, records: dict) -> list[dict]:
     rows = []
     for image, ann in gt.items():
         record = records.get(image)
-        if record is None or ann.get("code") is None:
+        if record is None or ann.get("base_term_code") is None:
             continue
-        truth_code = ann["code"]
-        truth_label = ann["label"]
+        truth_code = ann["base_term_code"]
+        truth_label = ann["base_term_label"]
         system_code = ann["system_code"]
         vlm_code = ann["vlm_code"]
         system_label = record["classification"]["base_term_label"]

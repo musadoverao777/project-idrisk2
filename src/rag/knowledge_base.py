@@ -26,6 +26,7 @@ from llama_index.core.node_parser import (
 )
 from llama_index.core.schema import Document, TextNode
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 import chromadb
 from .foodex2_xlsx_loader import load_foodex2_terms
@@ -189,6 +190,22 @@ def chunk_documents(
         list of LlamaIndex nodes
     """
     if strategy == "semantic":
+        # Pré-divisão de segurança: o SemanticSplitter embeda frases individuais,
+        # e páginas de PDF com blocos muito longos (tabelas/listas sem pontuação)
+        # podem gerar um único input acima do limite de 8192 tokens do modelo de
+        # embeddings da OpenAI (erro 400). Limitamos cada documento a ~1500 tokens
+        # antes do chunking semântico — o comportamento semântico mantém-se dentro
+        # de cada janela e a construção da KB deixa de falhar.
+        pre_splitter = SentenceSplitter(chunk_size=1500, chunk_overlap=100)
+        bounded_documents: list[Document] = []
+        for doc in documents:
+            for piece in pre_splitter.split_text(doc.text):
+                bounded_documents.append(Document(text=piece, metadata=dict(doc.metadata)))
+        documents = bounded_documents
+        logger.info(
+            f"Pre-split into {len(documents)} bounded segments (<=1500 tokens) "
+            "before semantic chunking"
+        )
         parser = SemanticSplitterNodeParser(
             embed_model=embed_model,
             buffer_size=1,
@@ -210,18 +227,29 @@ def chunk_documents(
 # ---------------------------------------------------------------------------
 # Embedding model
 # ---------------------------------------------------------------------------
-def load_embedding_model(model_name: str = EMBEDDING_MODEL) -> HuggingFaceEmbedding:
+def load_embedding_model(model_name: str = EMBEDDING_MODEL):
     """
     Load the embedding model.
-    BAAI/bge-m3 is selected for:
-    - Multilingual support (EN, PT, ES, FR)
-    - Strong performance on technical domain text
-    - Local inference — no external API dependency (GDPR compliant)
+
+    Provider is selected via the IDRISK2_EMBEDDING_PROVIDER env variable:
+      - "huggingface" (default): BAAI/bge-m3 — multilingual, local, GDPR-safe.
+      - "openai": text-embedding-3-small — no HuggingFace download needed.
+        Requires OPENAI_API_KEY. Use this when HuggingFace is unreachable.
+
+    Set IDRISK2_EMBEDDING_PROVIDER=openai in your .env to switch.
     """
     import os
-    logger.info(f"Loading embedding model: {model_name}")
-    # Resolve cache folder: prefer LLAMA_INDEX_CACHE_DIR env var, otherwise
-    # use a local .cache dir relative to the project to avoid macOS permission issues.
+    provider = os.environ.get("IDRISK2_EMBEDDING_PROVIDER", "huggingface").lower()
+
+    if provider == "openai":
+        openai_model = os.environ.get("IDRISK2_OPENAI_EMBED_MODEL", "text-embedding-3-small")
+        logger.info(f"Loading OpenAI embedding model: {openai_model}")
+        embed_model = OpenAIEmbedding(model=openai_model)
+        Settings.embed_model = embed_model
+        return embed_model
+
+    # Default: HuggingFace local model
+    logger.info(f"Loading HuggingFace embedding model: {model_name}")
     cache_folder = os.environ.get(
         "LLAMA_INDEX_CACHE_DIR",
         str(Path(__file__).resolve().parents[2] / ".cache" / "llama_index"),

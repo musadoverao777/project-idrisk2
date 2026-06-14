@@ -6,8 +6,8 @@ __pycache__/
 # Configuração local com credenciais
 .env
 
-# Dados gerados em runtime
-data/
+# Dados gerados em runtime (apenas a pasta data/ da raiz, não src/data/)
+/data/
 
 # Modelos e cache (podem ser grandes)
 .cache/

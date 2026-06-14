@@ -40,6 +40,7 @@ EXPOSE 7860
 
 # A base de conhecimento (Chroma) é construída no 1.º arranque a partir de
 # docs/efsa (embeddings OpenAI). Os modelos do EasyOCR/ColBERT descarregam
-# no 1.º pedido. Define os secrets OPENAI_API_KEY, ANTHROPIC_API_KEY e
-# IDRISK2_AUDIT_KEY nas definições do Space.
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "7860"]
+# no 1.º pedido. Define as variáveis OPENAI_API_KEY, ANTHROPIC_API_KEY,
+# IDRISK2_AUDIT_KEY e a ligação ao Supabase (PG*) no host.
+# Usa a porta dinâmica do host (Railway define $PORT) com 7860 por defeito.
+CMD ["sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-7860}"]

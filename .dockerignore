@@ -3,7 +3,7 @@
 frontend/
 node_modules/
 .cache/
-data/
+/data/
 .git/
 __pycache__/
 *.pyc

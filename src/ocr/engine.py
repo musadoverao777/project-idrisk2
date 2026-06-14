@@ -22,7 +22,12 @@ import cv2
 import numpy as np
 import pytesseract
 import easyocr
-from paddleocr import PaddleOCR
+try:
+    # paddleocr é opcional (pesado; requer paddlepaddle). Só é necessário se
+    # IDRISK2_OCR_ENGINE=paddleocr. Em deploys leves não é instalado.
+    from paddleocr import PaddleOCR
+except ImportError:
+    PaddleOCR = None
 logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Supported language codes per engine
@@ -140,6 +145,11 @@ class PaddleOCREngine(BaseOCREngine):
     common on curved packaging.
     """
     def __init__(self, lang: str = PADDLEOCR_LANG):
+        if PaddleOCR is None:
+            raise ImportError(
+                "paddleocr não está instalado neste ambiente. "
+                "Usa IDRISK2_OCR_ENGINE=easyocr (ou tesseract), ou instala paddleocr."
+            )
         logger.info("Initialising PaddleOCR...")
         self.ocr = PaddleOCR(
             use_textline_orientation=True,

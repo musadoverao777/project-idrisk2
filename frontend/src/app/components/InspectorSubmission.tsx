@@ -182,7 +182,7 @@ export function InspectorSubmission() {
               <div className="w-full max-w-md space-y-2">
                 <Progress value={progress} className="h-2" />
                 <p className="text-sm text-slate-600">{stageLabel}</p>
-                <p className="text-xs text-slate-400">Classification typically takes ~20 seconds</p>
+                <p className="text-xs text-slate-400">Na cloud pode demorar 1–3 minutos (CPU). Aguarda…</p>
               </div>
             </div>
           </CardContent>

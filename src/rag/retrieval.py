@@ -270,6 +270,7 @@ def retrieve(
     llm: LLM,
     use_hyde: bool = True,
     use_rewrite: bool = True,
+    use_rerank: bool = True,
 ) -> RAGContext:
     """
     Full Advanced RAG retrieval pipeline.
@@ -297,7 +298,14 @@ def retrieve(
     sparse_nodes = sparse_retrieve(index, rewritten, fallback_nodes=dense_nodes)
     fused = reciprocal_rank_fusion(dense_nodes, sparse_nodes)
     # --- Post-retrieval ---
-    reranked = rerank_passages(rewritten, fused)
+    # O re-rank ColBERT carrega um modelo cross-encoder (pesado em CPU). Pode ser
+    # desligado (IDRISK2_USE_RERANK=false) para deploys CPU; nesse caso usamos
+    # diretamente os melhores candidatos da fusão RRF.
+    if use_rerank:
+        reranked = rerank_passages(rewritten, fused)
+    else:
+        logger.info("Re-rank ColBERT desligado — a usar top-%d da fusão RRF", TOP_K_RERANK)
+        reranked = fused[:TOP_K_RERANK]
     passages = compress_context(reranked)
     # Assemble context text for prompt injection
     context_text = "\n\n---\n\n".join(

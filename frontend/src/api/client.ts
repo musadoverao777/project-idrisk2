@@ -8,7 +8,7 @@ import type {
   DashboardStats,
 } from '../types/classification'
 
-const CLASSIFY_TIMEOUT_MS = 180_000
+const CLASSIFY_TIMEOUT_MS = 300_000  // 5 min — o backend na cloud (CPU) é mais lento
 
 // Endereço base do backend.
 // Prioridade: ?api=<url> (guardado em localStorage) > VITE_API_BASE (build) > '' (relativo, dev local com proxy Vite).
@@ -138,7 +138,7 @@ export async function classifyImage(file: File): Promise<ClassificationResult> {
     return response.json() as Promise<ClassificationResult>
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new Error('Tempo limite excedido. A classificação pode demorar até 2 minutos.')
+      throw new Error('Tempo limite excedido (5 min). O servidor na cloud pode estar sobrecarregado — tenta de novo.')
     }
     throw error
   } finally {

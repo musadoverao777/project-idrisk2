@@ -67,10 +67,15 @@ class PipelineConfig:
     chunking_strategy: str = "semantic"
     use_hyde: bool = True
     use_query_rewrite: bool = True
+    use_rerank: bool = True
     @classmethod
     def from_env(cls) -> "PipelineConfig":
         """Load configuration from environment variables."""
         import os
+
+        def _flag(name: str, default: bool = True) -> bool:
+            return os.environ.get(name, str(default)).strip().lower() not in ("false", "0", "no")
+
         config = load_config()
         data_dir = Path(config["IDRISK2_DATA_DIR"])
         return cls(
@@ -82,6 +87,11 @@ class PipelineConfig:
             ocr_engine=os.environ.get("IDRISK2_OCR_ENGINE", "paddleocr"),
             vlm_model=os.environ.get("IDRISK2_VLM_MODEL", "gpt4o"),
             llm_model=os.environ.get("IDRISK2_LLM_MODEL", "gpt-4o"),
+            # Etapas pesadas do RAG — desligáveis por env para deploys CPU (ex.: cloud).
+            # Mantêm-se ligadas por defeito (pipeline completo da dissertação).
+            use_hyde=_flag("IDRISK2_USE_HYDE", True),
+            use_query_rewrite=_flag("IDRISK2_USE_QUERY_REWRITE", True),
+            use_rerank=_flag("IDRISK2_USE_RERANK", True),
         )
 # ---------------------------------------------------------------------------
 # Pipeline output
@@ -196,6 +206,7 @@ class IDRISK2Pipeline:
             llm=self.llm,
             use_hyde=self.config.use_hyde,
             use_rewrite=self.config.use_query_rewrite,
+            use_rerank=self.config.use_rerank,
         )
         logger.info(
             f"RAG retrieved {len(rag_context.retrieved_passages)} passages"
